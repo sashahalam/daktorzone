@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ডাক্তার / ডায়াগনস্টিক: সবাই দেখতে ও যোগ করতে পারবে, কেউ edit/delete পারবে না
+    match /doctors/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.name is string
+                    && request.resource.data.name.size() > 1
+                    && request.resource.data.name.size() <= 80
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.size() <= 20
+                    && request.resource.data.category is string
+                    && request.resource.data.category.size() <= 40
+                    && request.resource.data.hospital is string
+                    && request.resource.data.hospital.size() <= 100
+                    && request.resource.data.type in ['doctor', 'diagnostic']
+                    && request.resource.data.upazila in ['মৌলভীবাজার সদর','শ্রীমঙ্গল','কুলাউড়া','বড়লেখা','জুড়ী','রাজনগর','কমলগঞ্জ']
+                    && request.resource.data.fee is number
+                    && request.resource.data.fee >= 0
+                    && request.resource.data.fee <= 100000;
+      allow update, delete: if false;
+    }
+
+    // রিভিউ
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.doctorId is string
+                    && request.resource.data.name is string
+                    && request.resource.data.name.size() <= 40
+                    && request.resource.data.rating is number
+                    && request.resource.data.rating >= 1
+                    && request.resource.data.rating <= 5
+                    && (!('text' in request.resource.data) || request.resource.data.text.size() <= 400);
+      allow update, delete: if false;
+    }
+
+    // নতুন ক্যাটাগরি
+    match /categories/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.name is string
+                    && request.resource.data.name.size() <= 40;
+      allow update, delete: if false;
+    }
+  }
+}
